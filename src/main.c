@@ -39,16 +39,18 @@ open_hiber_file(const LPWSTR drive, enum open_file_mode mode);
 
 int WINAPI wWinMain(HINSTANCE CurI, HINSTANCE PrevI, LPWSTR Cmd, int ShowCmd)
 {
+    LPWSTR sys_drv, drives, cur_drv;
+
     if (!get_backup_privileges(enable))
         return set_privileges_fail;
 
-    LPWSTR sys_drv = get_sys_drive();
+    sys_drv = get_sys_drive();
 
-    LPWSTR drives = get_drives();
+    drives = get_drives();
     if (!drives)
         return get_drives_list_fail;
 
-    LPWSTR cur_drv = drives;
+    cur_drv = drives;
     for (;;) {
         cur_drv = next_drive(cur_drv, sys_drv);
         if (!cur_drv)
@@ -60,49 +62,54 @@ int WINAPI wWinMain(HINSTANCE CurI, HINSTANCE PrevI, LPWSTR Cmd, int ShowCmd)
 
     free(drives);
     return success;
-};
+}
 
 int check_hiberfil(const LPWSTR drive)
 {
+    char buffer[] = { 0, 0, 0, 0 };
     HANDLE hiber_file_handle;
+    DWORD readed;
+    int i;
+
     hiber_file_handle = open_hiber_file(drive, read);
 
     if (hiber_file_handle == INVALID_HANDLE_VALUE)
         return 0;
 
-    char buffer[] = { 0, 0, 0, 0 };
-
-    DWORD readed;
     ReadFile(hiber_file_handle, &buffer, sizeof(buffer), &readed, NULL);
     CloseHandle(hiber_file_handle);
 
-    int i;
     for (i = 0; i < sizeof(buffer); i++)
         if (buffer[i] != gc_hiber_sign[i])
             return 0;
 
     return 1;
-};
+}
 
 int reset_hiberfil(const LPWSTR drive)
 {
+    DWORD written;
     HANDLE hiber_file_handle;
+
     hiber_file_handle = open_hiber_file(drive, write);
 
     if (hiber_file_handle == INVALID_HANDLE_VALUE)
         return 0;
 
-    DWORD written;
     WriteFile(hiber_file_handle, &gc_null_sign,
         sizeof(gc_null_sign), &written, NULL);
     CloseHandle(hiber_file_handle);
 
     return written;
-};
+}
 
 LPWSTR
 open_hiber_file(const LPWSTR drive, enum open_file_mode mode)
 {
+    LPWSTR hiber_file_path;
+    int hiber_file_path_len;
+    HANDLE hiber_file_handle;
+
     DWORD desired_access, share_mode;
     switch (mode) {
     case read:
@@ -117,13 +124,12 @@ open_hiber_file(const LPWSTR drive, enum open_file_mode mode)
         return INVALID_HANDLE_VALUE;
     }
 
-    int hiber_file_path_len = _scwprintf(L"%s%s", drive, gc_hiber_file_name);
+    hiber_file_path_len = _scwprintf(L"%s%s", drive, gc_hiber_file_name);
 
-    LPWSTR hiber_file_path = calloc(hiber_file_path_len + 1, sizeof(WCHAR));
+    hiber_file_path = calloc(hiber_file_path_len + 1, sizeof(WCHAR));
     swprintf(hiber_file_path, hiber_file_path_len + 1,
         L"%s%s", drive, gc_hiber_file_name);
 
-    HANDLE hiber_file_handle;
     hiber_file_handle = CreateFileW(hiber_file_path, desired_access, share_mode,
         NULL, OPEN_EXISTING, 0, NULL);
 
@@ -134,4 +140,4 @@ open_hiber_file(const LPWSTR drive, enum open_file_mode mode)
 
     free(hiber_file_path);
     return hiber_file_handle;
-};
+}

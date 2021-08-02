@@ -11,7 +11,7 @@ LPWSTR next_drive(LPWSTR drives, LPWSTR sys_drv);
 
 LPWSTR get_drives()
 {
-
+    LPWSTR buffer;
     DWORD buf_size;
     buf_size = GetLogicalDriveStringsW(0, 0);
     if (buf_size == 0)
@@ -19,7 +19,7 @@ LPWSTR get_drives()
 
     buf_size *= sizeof(WCHAR);
 
-    LPWSTR buffer = malloc(buf_size + sizeof(WCHAR));
+    buffer = malloc(buf_size + sizeof(WCHAR));
     if (buffer == NULL)
         return NULL;
 
@@ -27,17 +27,17 @@ LPWSTR get_drives()
         return NULL;
 
     return buffer;
-};
+}
 
 LPWSTR get_sys_drive()
 {
+    LPWSTR sys_drv;
     size_t size;
     _wgetenv_s(&size, NULL, 0, L"SystemDrive");
 
     if (!size)
         return NULL;
 
-    LPWSTR sys_drv;
     /* Reserve 1 char for ending "\" */
     sys_drv = calloc(size + 1, sizeof(WCHAR));
 
@@ -47,7 +47,7 @@ LPWSTR get_sys_drive()
     if (_wgetenv_s(&size, sys_drv, size, L"SystemDrive")) {
         free(sys_drv);
         return NULL;
-    };
+    }
 
     sys_drv[size - 1] = L'\\';
     sys_drv[size] = L'\0';
@@ -69,7 +69,7 @@ LPWSTR next_drive(LPWSTR drives, LPWSTR sys_drv)
             continue;
 
         return cur_drv;
-    };
+    }
 
     return 0;
-};
+}

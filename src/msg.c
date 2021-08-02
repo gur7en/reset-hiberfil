@@ -20,21 +20,23 @@ void fail_mess();
 
 int ask_user(const LPWSTR drive)
 {
+    int result;
+    LPWSTR message;
+    int mess_len;
 
-    int mess_len = _scwprintf(gc_msg_fmt, drive);
-    LPWSTR message = calloc(mess_len + 1, sizeof(WCHAR));
+    mess_len = _scwprintf(gc_msg_fmt, drive);
+    message = calloc(mess_len + 1, sizeof(WCHAR));
     swprintf(message, mess_len, gc_msg_fmt, drive);
 
-    int result;
     result = MessageBoxW(NULL, message, gc_title,
         MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 
     free(message);
 
     return (result == IDYES);
-};
+}
 
 void fail_mess()
 {
     MessageBoxW(NULL, gc_msg_fail, gc_title, MB_OK);
-};
+}
